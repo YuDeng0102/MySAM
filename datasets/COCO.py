@@ -16,6 +16,7 @@ class COCODataset(Dataset):
         #检测文件是否存在
         assert dataset_type in ["train", "val"], 'dataset must be in ["train", "val"]'
         anno_file = f"instance_{dataset_type}.json"
+        self.root_dir=root_dir;
         assert os.path.exists(root_dir), "file '{}' does not exist.".format(root_dir)
         self.img_root = os.path.join(root_dir, f"{dataset_type}")
         assert os.path.exists(self.img_root), "path '{}' does not exist.".format(self.img_root)
@@ -43,7 +44,7 @@ class COCODataset(Dataset):
     def __getitem__(self, idx):
         image_id = self.image_ids[idx]
         image_info = self.coco.loadImgs(image_id)[0]
-        image_path = os.path.join(self.root_dir, image_info["file_name"])
+        image_path = os.path.join(self.img_root, image_info["file_name"])
       
         image = cv2.imread(image_path)
         # corrupt_image(image, image_path)
@@ -91,7 +92,7 @@ class COCODataset(Dataset):
 
             bboxes = np.stack(bboxes, axis=0)
             masks = np.stack(masks, axis=0)
-            return image, torch.tensor(bboxes), torch.tensor(masks).float()
+            return image, torch.tensor(bboxes), torch.tensor(masks).float(),image_id
 
 def load_datasets(cfg, img_size):
     transform = ResizeAndPad(img_size)

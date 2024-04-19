@@ -105,9 +105,9 @@ def soft_transform_all(
 
 
 def collate_fn(batch):
-    images, bboxes, masks = zip(*batch)
+    images, bboxes, masks,image_ids= zip(*batch)
     images = torch.stack(images)
-    return images, bboxes, masks
+    return images, bboxes, masks,image_ids
 
 
 def collate_fn_soft(batch):

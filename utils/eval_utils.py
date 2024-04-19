@@ -56,12 +56,13 @@ def validate(fabric: L.Fabric, cfg: Box, model: Model, val_dataloader: DataLoade
 
     with torch.no_grad():
         for iter, data in enumerate(val_dataloader):
-            images, bboxes, gt_masks = data
+            images, bboxes, gt_masks,_= data
             num_images = images.size(0)
 
             prompts = get_prompts(cfg, bboxes, gt_masks)
 
             _, pred_masks, _, _ = model(images, prompts)
+            pred_masks=pred_masks.numpy()
             for pred_mask, gt_mask in zip(pred_masks, gt_masks):
                 batch_stats = smp.metrics.get_stats(
                     pred_mask,

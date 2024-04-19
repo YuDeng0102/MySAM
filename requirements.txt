@@ -1,4 +1,11 @@
 scikit-image
+scikit-learn
 segment_anything
-lightning
 segmentation_models_pytorch
+lightning
+gym
+python-box
+torchsummary
+tensorboard
+albumentations
+imagecorruptions

@@ -3,9 +3,9 @@ from configs.base_config import base_config
 
 
 config = {
-    "gpu_ids": "1",
+    "gpu_ids": "0",
     "batch_size": 1,
-    "val_batchsize": 4,
+    "val_batchsize": 1,
     "num_workers": 4,
     "num_epochs": 5,
     "max_nums": 50,
@@ -13,7 +13,7 @@ config = {
     "resume": False,
     "dataset": "COCO",
     "visual": False,
-    "load_type": "soft",
+    "load_type": "load",
     "prompt": "box",
     "out_dir": "output/COCO/wesam/",
     "name": "base",

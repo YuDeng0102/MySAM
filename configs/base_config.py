@@ -38,8 +38,7 @@ base_config = {
     },
     "datasets": {
         "coco": {
-            "root_dir": "./data/coco2017/val2017",            
-            "annotation_file": "./data/coco2017/annotations/instances_val2017.json",
+            "root_dir": "./data/MyCoco2"
         }
     },
 }
