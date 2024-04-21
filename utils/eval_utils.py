@@ -62,7 +62,7 @@ def validate(fabric: L.Fabric, cfg: Box, model: Model, val_dataloader: DataLoade
             prompts = get_prompts(cfg, bboxes, gt_masks)
 
             _, pred_masks, _, _ = model(images, prompts)
-            pred_masks=pred_masks.numpy()
+
             for pred_mask, gt_mask in zip(pred_masks, gt_masks):
                 batch_stats = smp.metrics.get_stats(
                     pred_mask,

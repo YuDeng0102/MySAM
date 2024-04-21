@@ -16,7 +16,7 @@ from datasets import call_load_dataset
 from model import Model
 from utils.eval_utils import AverageMeter, calc_iou, get_prompts, validate
 from utils.tools import copy_model, create_csv, check_grad, momentum_update, reduce_instances
-from utils.eval_coco_mAp import eval_coco_mAp
+from utils.eval_coco_mAp import evaluate_coco_map
 
 def train_sam(
     cfg: Box,
@@ -34,6 +34,7 @@ def train_sam(
     dice_loss = DiceLoss()
     contra_loss = ContraLoss()
     max_iou = 0.
+    max_map=0.
 
     for epoch in range(1, cfg.num_epochs + 1):
         batch_time = AverageMeter()
@@ -121,11 +122,12 @@ def train_sam(
             torch.cuda.empty_cache()
 
         if epoch % cfg.eval_interval == 0:
-            iou, f1_score = validate(fabric, cfg, model, val_dataloader, cfg.name, epoch)
-            if iou > max_iou:
+            #iou, f1_score = validate(fabric, cfg, model, val_dataloader, cfg.name, epoch)
+            map,map_50,map_75=evaluate_coco_map(fabric, cfg, model, val_dataloader, cfg.name, epoch)
+            if map > max_map:
                 state = {"model": model, "optimizer": optimizer}
                 fabric.save(os.path.join(cfg.out_dir, "save", "last-ckpt.pth"), state)
-                max_iou = iou
+                max_map = map
 
 
 def configure_opt(cfg: Box, model: Model):
@@ -163,7 +165,7 @@ def main(cfg: Box) -> None:
                       strategy="auto",
                       loggers=[TensorBoardLogger(cfg.out_dir)])
     fabric.launch()
-    fabric.seed_everything(1337 + fabric.global_rank)
+    fabric.seed_everything(1737 + fabric.global_rank)
 
     if fabric.global_rank == 0:
         os.makedirs(os.path.join(cfg.out_dir, "save"), exist_ok=True)
@@ -187,10 +189,10 @@ def main(cfg: Box) -> None:
         model.load_state_dict(full_checkpoint["model"])
         optimizer.load_state_dict(full_checkpoint["optimizer"])
 
-    #anchor_model = copy_model(model)
+    anchor_model = copy_model(model)
     #validate(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=0)
-    #train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_data, val_data)
-    eval_coco_mAp(cfg,model,val_data)
+    train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_data, val_data)
+    #evaluate_coco_map(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=cfg.num_epochs)
 
 
     del model, anchor_model, train_data, val_data
@@ -204,10 +206,5 @@ if __name__ == "__main__":
     print("avaiable:",torch.cuda.device_count())
 
     import torch
-
-    print(torch.__version__)  # 查看torch当前版本号
-    print(torch.version.cuda)  # 编译当前版本的torch使用的cuda版本号
-    print(torch.cuda.is_available())  # 查看当前cuda是否可用于当前版本的Torch，如果输出True，则表示可用
-
-    #main(cfg)
+    main(cfg)
     torch.cuda.empty_cache()

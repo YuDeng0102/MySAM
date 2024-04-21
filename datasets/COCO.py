@@ -123,3 +123,34 @@ def load_datasets(cfg, img_size):
         collate_fn=collate_fn,
     )
     return train_dataloader, val_dataloader
+
+def load_datasets_soft(cfg, img_size):
+    transform = ResizeAndPad(img_size)
+    val = COCODataset(
+        cfg,
+        root_dir=cfg.datasets.coco.root_dir,
+        transform=transform,
+        dataset_type='val',
+    )
+    soft_train = COCODataset(
+        cfg,
+        root_dir=cfg.datasets.coco.root_dir,
+        transform=transform,
+        if_self_training=True,
+        dataset_type='train',
+    )
+    val_dataloader = DataLoader(
+        val,
+        batch_size=cfg.val_batchsize,
+        shuffle=True,
+        num_workers=cfg.num_workers,
+        collate_fn=collate_fn,
+    )
+    soft_train_dataloader = DataLoader(
+        soft_train,
+        batch_size=cfg.batch_size,
+        shuffle=True,
+        num_workers=cfg.num_workers,
+        collate_fn=collate_fn_soft,
+    )
+    return soft_train_dataloader, val_dataloader

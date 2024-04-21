@@ -1,2 +1,5 @@
 Name,Prompt,Mean IoU,Mean F1,epoch
-base,box,0.6599,0.7833,0
+base,box,0.6618,0.7849,0
+
+base,box,,,5
+base,box,,,5

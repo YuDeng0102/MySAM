@@ -1,7 +1,7 @@
 base_config = {
     "eval_interval": 1,
     "ema_rate": 0.999,
-    "csv_keys": ["Name", "Prompt", "Mean IoU", "Mean F1", "epoch"],
+    "csv_keys": ["Name", "Prompt", "map", "map_50", "map_75"],
     "opt": {
         "learning_rate": 1e-4,
         "weight_decay": 1e-4,
@@ -33,7 +33,7 @@ base_config = {
         "freeze": {
             "image_encoder": True,
             "prompt_encoder": True,
-            "mask_decoder": True,
+            "mask_decoder": False,
         },
     },
     "datasets": {
