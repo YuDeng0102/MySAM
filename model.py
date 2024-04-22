@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from segment_anything import sam_model_registry
-
+from sam_lora import LoRA_Sam
 class Model(nn.Module):
 
     def __init__(self, cfg):
@@ -41,7 +41,7 @@ class Model(nn.Module):
         self.finetune()
 
     def finetune(self):
-        pass
+        LoRA_Sam(self.model, 4)
         # self.set_norm_layer()
         # self.set_evp_adaptor_layer()
         # self.set_prompt_layer()
