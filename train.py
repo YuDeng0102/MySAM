@@ -191,7 +191,7 @@ def main(cfg: Box) -> None:
 
     anchor_model = copy_model(model)
     #validate(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=0)
-    train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_data, val_data)
+    #train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_data, val_data)
     #evaluate_coco_map(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=cfg.num_epochs)
 
 

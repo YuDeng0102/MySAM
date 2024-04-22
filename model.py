@@ -29,8 +29,8 @@ class Model(nn.Module):
 
         self.model.train()
         if self.cfg.model.freeze.image_encoder:
-            for param in self.model.image_encoder.parameters():
-                param.requires_grad = False
+            for name,param in self.model.image_encoder.named_parameters():
+                    param.requires_grad = False
         if self.cfg.model.freeze.prompt_encoder:
             for param in self.model.prompt_encoder.parameters():
                 param.requires_grad = False
