@@ -14,11 +14,11 @@ class COCODataset(Dataset):
     def __init__(self, cfg, root_dir, dataset_type='train', transform=None,if_self_training=False):
         
         #检测文件是否存在
-        # assert dataset_type in ["train", "val"], 'dataset must be in ["train", "val"]'
-        anno_file = "my_annotations.json"
-        self.root_dir=root_dir;
+        assert dataset_type in ["train", "test"], 'dataset must be in ["train", "test"]'
+        anno_file = f"{dataset_type}_annotations.json"
+        self.root_dir=root_dir
         assert os.path.exists(root_dir), "file '{}' does not exist.".format(root_dir)
-        self.img_root = os.path.join(root_dir, "images")
+        self.img_root = os.path.join(root_dir, dataset_type)
         assert os.path.exists(self.img_root), "path '{}' does not exist.".format(self.img_root)
         self.anno_path = os.path.join(root_dir, "annotations", anno_file)
         assert os.path.exists(self.anno_path), "file '{}' does not exist.".format(self.anno_path)
