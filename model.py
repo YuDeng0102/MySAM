@@ -38,10 +38,11 @@ class Model(nn.Module):
             for param in self.model.mask_decoder.parameters():
                 param.requires_grad = False
 
-        self.finetune()
+        #self.finetune()
 
     def finetune(self):
-        LoRA_Sam(self.model, 4)
+        #LoRA_Sam(self.model, 4)
+        pass
         # self.set_norm_layer()
         # self.set_evp_adaptor_layer()
         # self.set_prompt_layer()

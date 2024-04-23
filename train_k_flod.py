@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from configs.config import cfg
 from datasets.COCO import COCODataset
-from datasets.tools import ResizeAndPad, collate_fn
+from datasets.tools import ResizeAndPad, collate_fn, collate_fn_soft
 from losses import DiceLoss, FocalLoss, ContraLoss
 from datasets import call_load_dataset
 
@@ -40,7 +40,9 @@ def train_sam(
     max_map = 0.
 
 
-    train_dataloader.dataset.dataset.if_self_training=True
+
+    # train_dataloader.dataset.dataset.if_self_training=True
+
     for epoch in range(1, cfg.num_epochs + 1):
         batch_time = AverageMeter()
         data_time = AverageMeter()
@@ -66,8 +68,8 @@ def train_sam(
             prompts = get_prompts(cfg, bboxes, gt_masks)
 
             with torch.no_grad():
-                anchor_image_embeds, anchor_masks, anchor_iou_predictions, anchor_res_masks = anchor_model(images_weak,
-                                                                                                           prompts)
+                 anchor_image_embeds, anchor_masks, anchor_iou_predictions, anchor_res_masks = anchor_model(images_weak,
+                                                                                                            prompts)
 
             soft_image_embeds, soft_masks, soft_iou_predictions, soft_res_masks = model(images_weak, prompts)  # teacher
             pred_image_embeds, pred_masks, iou_predictions, pred_res_masks = model(images_strong, prompts)  # student
@@ -149,7 +151,7 @@ def configure_opt(cfg: Box, model: Model):
         else:
             return 1 / (cfg.opt.decay_factor ** 2)
 
-    optimizer = torch.optim.Adam(model.model.parameters(), lr=cfg.opt.learning_rate, weight_decay=cfg.opt.weight_decay)
+    optimizer = torch.optim.SGD(model.model.parameters(), lr=cfg.opt.learning_rate,momentum=cfg.opt.momentum, weight_decay=cfg.opt.weight_decay)
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
     return optimizer, scheduler
@@ -202,10 +204,8 @@ def main(cfg: Box) -> None:
         print(f"Training fold {fold + 1}/5")
         train_subset = torch.utils.data.Subset(train_dataset, train_index)
 
-        train_dataset.if_self_training =False
+
         val_subset = torch.utils.data.Subset(train_dataset, val_index)
-
-
 
 
         train_loader =DataLoader(
@@ -213,7 +213,7 @@ def main(cfg: Box) -> None:
             batch_size=cfg.batch_size,
             shuffle=True,
             num_workers=cfg.num_workers,
-            collate_fn=collate_fn
+            collate_fn=collate_fn_soft,
         )
 
         val_loader = DataLoader(
@@ -238,7 +238,12 @@ def main(cfg: Box) -> None:
 
         model, optimizer = fabric.setup(model, optimizer)
         anchor_model = copy_model(model)
+
+        train_dataset.if_self_training = True
         train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_loader, val_loader)
+
+        train_dataset.if_self_training = False
+        evaluate_coco_map(fabric, cfg, model, val_loader, name=cfg.name, epoch=cfg.num_epochs)
         del model, anchor_model, train_loader, val_loader
 
 
@@ -261,6 +266,7 @@ def main(cfg: Box) -> None:
         num_workers=cfg.num_workers,
         collate_fn=collate_fn
     )
+    test_loader = fabric._setup_dataloader(test_loader)
     fabric.print('the best model:')
     evaluate_coco_map(fabric, cfg, best_model, test_loader, name=cfg.name, epoch=cfg.num_epochs)
     # validate(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=0)

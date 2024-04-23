@@ -52,6 +52,9 @@ def train_sam(
 
             data_time.update(time.time() - end)
             images_weak, images_strong, bboxes, gt_masks = data
+
+
+
             batch_size = images_weak.size(0)
             num_insts = sum(len(gt_mask) for gt_mask in gt_masks)
             if num_insts > cfg.max_nums:
