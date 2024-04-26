@@ -41,9 +41,12 @@ def train_sam(
 
 
 
-    # train_dataloader.dataset.dataset.if_self_training=True
+
 
     for epoch in range(1, cfg.num_epochs + 1):
+
+
+
         batch_time = AverageMeter()
         data_time = AverageMeter()
         focal_losses = AverageMeter()
@@ -133,6 +136,8 @@ def train_sam(
 
         if epoch % cfg.eval_interval == 0:
             # iou, f1_score = validate(fabric, cfg, model, val_dataloader, cfg.name, epoch)
+
+
             map, map_50, map_75 = evaluate_coco_map(fabric, cfg, model, val_dataloader, cfg.name, epoch)
             if map > max_map:
                 state = {"model": model, "optimizer": optimizer}
@@ -179,37 +184,45 @@ def main(cfg: Box) -> None:
     fabric.launch()
     fabric.seed_everything(1737 + fabric.global_rank)
 
-    if fabric.global_rank == 0:
-        os.makedirs(os.path.join(cfg.out_dir, "save"), exist_ok=True)
-        create_csv(os.path.join(cfg.out_dir, "metrics.csv"), csv_head=cfg.csv_keys)
 
 
 
+
+    data_root=cfg.datasets.coco.root_dir
     transform = ResizeAndPad(1024)
-    train_dataset = COCODataset(
-        cfg,
-        root_dir=cfg.datasets.coco.root_dir,
-        transform=transform,
-        dataset_type='train',
-        if_self_training=True
-    )
-
-    n_samples=len(train_dataset)
+    out_root=cfg.out_dir
 
 
 
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-    for fold, (train_index, val_index) in enumerate(kf.split(range(n_samples))):
+
+    best_map=0
+    best_fold=cfg.start_fold
+    for fold in range(cfg.start_fold,5):
         print(f"Training fold {fold + 1}/5")
-        train_subset = torch.utils.data.Subset(train_dataset, train_index)
+        cfg.out_dir=os.path.join(out_root,f'fold_{fold}')
+        if fabric.global_rank == 0:
+            os.makedirs(os.path.join(cfg.out_dir, "save"), exist_ok=True)
+            create_csv(os.path.join(cfg.out_dir, "metrics.csv"), csv_head=cfg.csv_keys)
+        print(f'out_dir={cfg.out_dir}')
 
 
-        val_subset = torch.utils.data.Subset(train_dataset, val_index)
-
+        train_dataset=COCODataset(
+            cfg,
+            root_dir=os.path.join(data_root,f'fold_{fold}'),
+            transform=transform,
+            dataset_type='train',
+            if_self_training=True,
+        )
+        val_dataset= COCODataset(
+            cfg,
+            root_dir=os.path.join(data_root,f'fold_{fold}'),
+            transform=transform,
+            dataset_type='val',
+        )
 
         train_loader =DataLoader(
-            train_subset,
+            train_dataset,
             batch_size=cfg.batch_size,
             shuffle=True,
             num_workers=cfg.num_workers,
@@ -217,7 +230,7 @@ def main(cfg: Box) -> None:
         )
 
         val_loader = DataLoader(
-            val_subset,
+            val_dataset,
             batch_size=cfg.batch_size,
             shuffle=True,
             num_workers=cfg.num_workers,
@@ -227,23 +240,23 @@ def main(cfg: Box) -> None:
         train_loader = fabric._setup_dataloader(train_loader)
         val_loader = fabric._setup_dataloader(val_loader)
 
+
         with fabric.device:
             model = Model(cfg)
             model.setup()
         optimizer, scheduler = configure_opt(cfg, model)
-        if cfg.resume and cfg.model.ckpt is not None:
+        if cfg.resume and cfg.model.ckpt is not None and fold==cfg.start_fold:
             full_checkpoint = fabric.load(cfg.model.ckpt)
             model.load_state_dict(full_checkpoint["model"])
             optimizer.load_state_dict(full_checkpoint["optimizer"])
 
         model, optimizer = fabric.setup(model, optimizer)
         anchor_model = copy_model(model)
-
-        train_dataset.if_self_training = True
-        train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_loader, val_loader)
-
-        train_dataset.if_self_training = False
-        evaluate_coco_map(fabric, cfg, model, val_loader, name=cfg.name, epoch=cfg.num_epochs)
+        #train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_loader, val_loader)
+        map,_,_=evaluate_coco_map(fabric, cfg, model, val_loader, name=cfg.name, epoch=cfg.num_epochs)
+        if map>best_map:
+            best_map = map
+            best_fold=fold
         del model, anchor_model, train_loader, val_loader
 
 
@@ -267,7 +280,13 @@ def main(cfg: Box) -> None:
         collate_fn=collate_fn
     )
     test_loader = fabric._setup_dataloader(test_loader)
-    fabric.print('the best model:')
+
+
+    full_checkpoint = fabric.load(os.path.join(out_root,f'fold_{best_fold}','save','last-ckpt.pth'))
+    best_model.load_state_dict(full_checkpoint["model"])
+
+    fabric.print(f'the best model:{best_fold}')
+
     evaluate_coco_map(fabric, cfg, best_model, test_loader, name=cfg.name, epoch=cfg.num_epochs)
     # validate(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=0)
 

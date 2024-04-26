@@ -9,3 +9,4 @@ torchsummary
 tensorboard
 albumentations
 imagecorruptions
+pycocotools

@@ -42,7 +42,7 @@ def evaluate_coco_map(fabric: L.Fabric, cfg: Box, model: Model, val_dataloader: 
             result = metric.compute()
             map,map_50,map_75=result['map'],result['map_50'],result['map_75']
             fabric.print(
-                f'Val: [{epoch}] - [{iter+1}/{len(val_dataloader)}]: map: [{map:.3f}] -- map_50: [{map_50:.3f}] -- map_75: [{map_75:}]'
+                f'Val: [{epoch}] - [{iter+1}/{len(val_dataloader)}]: map: [{map:.3f}] -- map_50: [{map_50:.3f}] -- map_75: [{map_75:.4f}]'
             )
 
             torch.cuda.empty_cache()
@@ -52,10 +52,8 @@ def evaluate_coco_map(fabric: L.Fabric, cfg: Box, model: Model, val_dataloader: 
         f'Validation: [{epoch}] - [{iter+1}/{len(val_dataloader)}]: map: [{map:.3f}] -- map_50: [{map_50:.3f}] -- map_75: [{map_75:3f}'
     )
 
-    csv_dict = {"Name": name, "Prompt": cfg.prompt, "map": f"{map:.4f}", "map_50": f"{map_50:.4f}", "map_75":f"{map_75}","epoch":epoch}
+    csv_dict = {"Name": name, "Prompt": cfg.prompt, "map": f"{map:.4f}", "map_50": f"{map_50:.4f}", "map_75":f"{map_75:.4f}","epoch":epoch}
 
-    if fabric.global_rank == 0:
-        write_csv(os.path.join(cfg.out_dir, "metrics.csv"), csv_dict, csv_head=cfg.csv_keys)
     if fabric.global_rank == 0:
         write_csv(os.path.join(cfg.out_dir, "metrics.csv"), csv_dict, csv_head=cfg.csv_keys)
     model.train()

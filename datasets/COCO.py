@@ -7,15 +7,15 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from skimage.draw import polygon2mask
-from datasets.tools import ResizeAndPad, soft_transform, collate_fn, collate_fn_soft, collate_fn_
+from datasets.tools import ResizeAndPad, soft_transform, collate_fn, collate_fn_soft
 
 
 class COCODataset(Dataset):
     def __init__(self, cfg, root_dir, dataset_type='train', transform=None,if_self_training=False):
         
         #检测文件是否存在
-        assert dataset_type in ["train", "test"], 'dataset must be in ["train", "test"]'
-        anno_file = f"{dataset_type}_annotations.json"
+        assert dataset_type in ["train", "test","val"], 'dataset must be in ["train", "test","val]'
+        anno_file = f"instances_{dataset_type}.json"
         self.root_dir=root_dir
         assert os.path.exists(root_dir), "file '{}' does not exist.".format(root_dir)
         self.img_root = os.path.join(root_dir, dataset_type)
