@@ -252,7 +252,7 @@ def main(cfg: Box) -> None:
 
         model, optimizer = fabric.setup(model, optimizer)
         anchor_model = copy_model(model)
-        #train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_loader, val_loader)
+        train_sam(cfg, fabric, model, anchor_model, optimizer, scheduler, train_loader, val_loader)
         map,_,_=evaluate_coco_map(fabric, cfg, model, val_loader, name=cfg.name, epoch=cfg.num_epochs)
         if map>best_map:
             best_map = map
