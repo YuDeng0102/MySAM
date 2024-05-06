@@ -17,6 +17,7 @@ config = {
     "load_type": "soft",
     "prompt": "box",
     "out_dir": "output/MyCoco5/v0",
+    "resume_dir":"",
     "name": "base",
     "corrupt": None,
     "opt": {

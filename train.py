@@ -187,7 +187,7 @@ def main(cfg: Box) -> None:
     val_data = fabric._setup_dataloader(val_data)
     model, optimizer = fabric.setup(model, optimizer)
 
-    if cfg.resume and cfg.model.ckpt is not None:
+    if cfg.resume and cfg.resume_dir is not None:
         full_checkpoint = fabric.load(cfg.model.ckpt)
         model.load_state_dict(full_checkpoint["model"])
         optimizer.load_state_dict(full_checkpoint["optimizer"])

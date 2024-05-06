@@ -29,7 +29,6 @@ base_config = {
     "model": {
         "type": "vit_b",
         "checkpoint": "./checkpoints/",
-        "ckpt": "",
         "freeze": {
             "image_encoder": True,
             "prompt_encoder": True,

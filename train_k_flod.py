@@ -245,7 +245,7 @@ def main(cfg: Box) -> None:
             model = Model(cfg)
             model.setup()
         optimizer, scheduler = configure_opt(cfg, model)
-        if cfg.resume and cfg.model.ckpt is not None and fold==cfg.start_fold:
+        if cfg.resume and cfg.resume_dir is not None and fold==cfg.start_fold:
             full_checkpoint = fabric.load(cfg.model.ckpt)
             model.load_state_dict(full_checkpoint["model"])
             optimizer.load_state_dict(full_checkpoint["optimizer"])
@@ -298,6 +298,19 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu_ids
 
     print("avaiable:", torch.cuda.device_count())
+
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description=__doc__)
+    parser.add_argument('--resume_dir', default='', type=str, help='resume from checkpoint')
+    parser.add_argument('--batch_size', default=0, type=int, help='batch_size')
+
+    args = parser.parse_args()
+    if args.batch_size != 0:
+        cfg.batch_size = args.batch_size
+    if args.resume_dir != '':
+        cfg.resume_dir = args.resume_dir
 
     import torch
 
