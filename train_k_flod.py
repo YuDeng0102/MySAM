@@ -245,7 +245,7 @@ def main(cfg: Box) -> None:
             model = Model(cfg)
             model.setup()
         optimizer, scheduler = configure_opt(cfg, model)
-        if cfg.resume and cfg.resume_dir is not None and fold==cfg.start_fold:
+        if cfg.resume and cfg.resume_dir is not None:
             full_checkpoint = fabric.load(cfg.model.ckpt)
             model.load_state_dict(full_checkpoint["model"])
             optimizer.load_state_dict(full_checkpoint["optimizer"])
@@ -315,4 +315,5 @@ if __name__ == "__main__":
     import torch
 
     main(cfg)
+    #print(torch.cuda.is_available())
     torch.cuda.empty_cache()

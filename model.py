@@ -28,9 +28,16 @@ class Model(nn.Module):
         self.model = sam_model_registry[self.cfg.model.type](checkpoint=checkpoint)
 
         self.model.train()
+        require_img_encoder= ['adapter', 'pos_embed', 'level_embed', 'patch_embed', 'spm', 'InteractionBlocks']
+
         if self.cfg.model.freeze.image_encoder:
             for name,param in self.model.image_encoder.named_parameters():
-                    param.requires_grad = False
+                    requires_grad=False
+                    for u in require_img_encoder:
+                        if u in name:
+                            requires_grad = True
+                            break
+                    param.requires_grad =requires_grad
         if self.cfg.model.freeze.prompt_encoder:
             for param in self.model.prompt_encoder.parameters():
                 param.requires_grad = False

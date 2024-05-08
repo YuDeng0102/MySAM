@@ -98,3 +98,11 @@ def reduce_instances(bboxes, gt_masks, max_nums=50):
     bboxes = bboxes_
     gt_masks = gt_masks_
     return bboxes, gt_masks
+
+
+def get_parameter_number(model):
+    total_num = sum(p.numel() for p in model.parameters())
+    trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return {'Total': total_num, 'Trainable': trainable_num}
+
+

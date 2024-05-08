@@ -10,7 +10,9 @@ import torch.nn.functional as F
 
 from typing import Optional, Tuple, Type
 
-from .common import LayerNorm2d, MLPBlock,Adapter
+from segment_anything.modeling.common import LayerNorm2d, MLPBlock,Adapter
+from segment_anything.modeling.Adapter_models import InteractionBlock,SpatialPriorModule,deform_inputs
+
 
 
 # This class and its supporting functions below lightly adapted from the ViTDet backbone available at: https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/backbone/vit.py # noqa
@@ -33,6 +35,7 @@ class ImageEncoderViT(nn.Module):
         rel_pos_zero_init: bool = True,
         window_size: int = 0,
         global_attn_indexes: Tuple[int, ...] = (),
+        interaction_indexes=[[0,2],[3,5],[6,8],[9,11]],
     ) -> None:
         """
         Args:
@@ -51,6 +54,9 @@ class ImageEncoderViT(nn.Module):
             rel_pos_zero_init (bool): If True, zero initialize relative positional parameters.
             window_size (int): Window size for window attention blocks.
             global_attn_indexes (list): Indexes for blocks using global attention.
+
+            new added:
+                interaction_indexes:Indexs for blocks of per InteractionBlock
         """
         super().__init__()
         self.img_size = img_size
@@ -104,13 +110,39 @@ class ImageEncoderViT(nn.Module):
             LayerNorm2d(out_chans),
         )
 
+        # new
+        self.interaction_indexes=interaction_indexes
+        self.spm=SpatialPriorModule(embed_dim=embed_dim)
+        self.level_embed = nn.Parameter(torch.zeros(3, embed_dim))
+
+        self.InteractionBlocks=nn.ModuleList([InteractionBlock(dim=embed_dim) for i in range(len(interaction_indexes))])
+
+
+    def _add_level_embed(self, c2, c3, c4):
+        c2 = c2 + self.level_embed[0]
+        c3 = c3 + self.level_embed[1]
+        c4 = c4 + self.level_embed[2]
+        return c2, c3, c4
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        deform_inputs1, deform_inputs2 = deform_inputs(x)
+
+        # SPM forward
+        c1, c2, c3, c4 = self.spm(x)
+        c2, c3, c4 = self._add_level_embed(c2, c3, c4)
+        c = torch.cat([c2, c3, c4], dim=1)
+
         x = self.patch_embed(x)
         if self.pos_embed is not None:
             x = x + self.pos_embed
 
-        for blk in self.blocks:
-            x = blk(x)
+        # for blk in self.blocks:
+        #     x = blk(x)
+
+        for i,interaactionBlock in enumerate(self.InteractionBlocks):
+            indexes=self.interaction_indexes[i]
+            x,c=interaactionBlock(x,c,self.blocks[indexes[0]:indexes[1]+1],deform_inputs1,deform_inputs2)
+
 
         x = self.neck(x.permute(0, 3, 1, 2))
 
@@ -394,3 +426,20 @@ class PatchEmbed(nn.Module):
         # B C H W -> B H W C
         x = x.permute(0, 2, 3, 1)
         return x
+
+
+if __name__=='__main__':
+
+    import lightning as L
+    fabric = L.Fabric(accelerator="cuda",
+                      devices=1,
+                      strategy="auto"
+                      )
+    fabric.launch()
+    fabric.seed_everything(1737)
+    with fabric.device:
+        imageEncoder=ImageEncoderViT()
+        imageEncoder=imageEncoder.cuda(0)
+    x=torch.rand(1,3,1024,1024)
+    x=x.cuda(0)
+    x=imageEncoder(x)
