@@ -35,7 +35,6 @@ def train_sam(
 
     focal_loss = FocalLoss()
     dice_loss = DiceLoss()
-    max_iou = 0.
     max_map = 0.
 
     for epoch in range(1, cfg.num_epochs + 1):
@@ -65,7 +64,7 @@ def train_sam(
             num_masks = sum(len(pred_mask) for pred_mask in pred_masks)
             loss_focal = torch.tensor(0., device=fabric.device)
             loss_dice = torch.tensor(0., device=fabric.device)
-            loss_iou = torch.tensor(0., device=fabric.device)
+
 
             for i, (pred_mask, gt_mask, iou_prediction) in enumerate(
                     zip(pred_masks, gt_masks, iou_predictions)):
@@ -215,6 +214,9 @@ def main(cfg: Box) -> None:
     with fabric.device:
         best_model = Model(cfg)
         best_model.setup()
+
+    # from utils.tools import get_parameter_number
+    # print(get_parameter_number(best_model))
 
     test_dataset = COCODataset(
         cfg,
