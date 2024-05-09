@@ -25,7 +25,7 @@ class Model(nn.Module):
 
     def setup(self):
         checkpoint = self.get_checkpoint(self.cfg.model.type)
-        self.model = sam_model_registry[self.cfg.model.type](checkpoint=checkpoint)
+        self.model = sam_model_registry[self.cfg.model.type](checkpoint=checkpoint,adapted_img_encoder=self.cfg.adapted_img_encoder)
 
         self.model.train()
         require_img_encoder= ['adapter', 'level_embed', 'spm', 'InteractionBlocks','prompt_generator']

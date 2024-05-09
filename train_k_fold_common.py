@@ -215,8 +215,7 @@ def main(cfg: Box) -> None:
         best_model = Model(cfg)
         best_model.setup()
 
-    # from utils.tools import get_parameter_number
-    # print(get_parameter_number(best_model))
+
 
     test_dataset = COCODataset(
         cfg,
@@ -241,13 +240,15 @@ def main(cfg: Box) -> None:
     evaluate_coco_map(fabric, cfg, best_model, test_loader, name=cfg.name, epoch=cfg.num_epochs)
     # validate(fabric, cfg, anchor_model, val_data, name=cfg.name, epoch=0)
 
+def calc_paramaters(cfg):
+    with torch.no_grad():
+        model = Model(cfg)
+        model.setup()
+    from utils.tools import get_parameter_number
+    print(get_parameter_number(model))
 
 if __name__ == "__main__":
-    torch.cuda.empty_cache()
-    torch.set_float32_matmul_precision('high')
-    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu_ids
 
-    print("avaiable:", torch.cuda.device_count())
 
     import argparse
 
@@ -255,14 +256,22 @@ if __name__ == "__main__":
         description=__doc__)
     parser.add_argument('--resume_dir', default='', type=str, help='resume from checkpoint')
     parser.add_argument('--batch_size', default=0, type=int, help='batch_size')
+    parser.add_argument('--adapted_img_encoder',default=False,type=bool, help='adapted_img_encoder')
 
     args = parser.parse_args()
+
     if args.batch_size != 0:
         cfg.batch_size = args.batch_size
     if args.resume_dir != '':
         cfg.resume_dir = args.resume_dir
+    cfg.adapted_img_encoder = args.adapted_img_encoder
 
-    import torch
+
+    torch.cuda.empty_cache()
+    torch.set_float32_matmul_precision('high')
+    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu_ids
+
+    print("avaiable:", torch.cuda.device_count())
 
     main(cfg)
     # print(torch.cuda.is_available())

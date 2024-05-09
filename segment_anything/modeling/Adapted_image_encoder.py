@@ -25,7 +25,7 @@ else:
     import collections.abc as container_abcs
 
 # This class and its supporting functions below lightly adapted from the ViTDet backbone available at: https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/backbone/vit.py # noqa
-class ImageEncoderViT(nn.Module):
+class Adapted_ImageEncoderViT(nn.Module):
     def __init__(
         self,
         img_size: int = 1024,
@@ -314,7 +314,7 @@ class PromptGenerator(nn.Module):
         self.embedding_generator = nn.Linear(self.embed_dim, self.embed_dim//self.scale_factor)
         for i in range(self.depth):
             lightweight_mlp = nn.Sequential(
-                nn.Linear(self.embed_dim//self.scale_factor, self.embed_dim//self.scale_factor),
+                MLPBlock(self.embed_dim//self.scale_factor,self.embed_dim//self.scale_factor),
                 nn.GELU()
             )
             setattr(self, 'lightweight_mlp_{}'.format(str(i)), lightweight_mlp)
