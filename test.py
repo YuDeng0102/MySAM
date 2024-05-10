@@ -91,13 +91,13 @@ if __name__ == "__main__":
 
     parser.add_argument('--resume_dir', default='checkpoints/last-ckpt.pth', type=str, help='resume from checkpoint')
     parser.add_argument('--batch_size', default=1, type=int, help='batch_size')
+    parser.add_argument('--adapted_img_encoder', default=False, type=bool, help='adapted_img_encoder')
 
     args = parser.parse_args()
     if args.batch_size!=0:
         cfg.batch_size = args.batch_size
     if args.resume_dir!='':
         cfg.resume_dir =args.resume_dir
-
-
+    cfg.adapted_img_encoder = args.adapted_img_encoder
     main(cfg)
     torch.cuda.empty_cache()

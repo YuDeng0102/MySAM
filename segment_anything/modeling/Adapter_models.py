@@ -140,7 +140,7 @@ class ConvolutionalGLU(nn.Module):
 class MSGM(nn.Module):
     def __init__(self, in_features,hidden_features=None):
         super().__init__()
-        hidden_features=hidden_features or in_features//3
+        hidden_features=hidden_features or in_features//2
         self.cglu1=ConvolutionalGLU(in_features=in_features,hidden_features=hidden_features,dw_size=5,dw_padding=2)
         self.cglu2=ConvolutionalGLU(in_features=in_features,hidden_features=hidden_features,dw_size=3,dw_padding=1)
         self.cglu3=ConvolutionalGLU(in_features=in_features,hidden_features=hidden_features,dw_size=3,dw_padding=1)

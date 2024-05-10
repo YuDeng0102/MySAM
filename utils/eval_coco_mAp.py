@@ -42,7 +42,7 @@ def evaluate_coco_map(fabric: L.Fabric, cfg: Box, model: Model, val_dataloader: 
             result = metric.compute()
             map,map_50,map_75=result['map'],result['map_50'],result['map_75']
             fabric.print(
-                f'Val: [{epoch}] - [{iter+1}/{len(val_dataloader)}]: map: [{map:.3f}] -- map_50: [{map_50:.3f}] -- map_75: [{map_75:.4f}]'
+                f'Val: [{epoch}] - [{iter+1}/{len(val_dataloader)}]: map: [{map:.3f}] -- map_50: [{map_50:.3f}] -- map_75: [{map_75:.3f}]'
             )
 
             torch.cuda.empty_cache()

@@ -247,7 +247,7 @@ def main(cfg: Box) -> None:
             model.setup()
         optimizer, scheduler = configure_opt(cfg, model)
         if cfg.resume and cfg.resume_dir is not None:
-            full_checkpoint = fabric.load(cfg.model.ckpt)
+            full_checkpoint = fabric.load(cfg.resume_dir)
             model.load_state_dict(full_checkpoint["model"])
             optimizer.load_state_dict(full_checkpoint["optimizer"])
 

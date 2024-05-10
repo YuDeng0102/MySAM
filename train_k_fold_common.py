@@ -198,7 +198,7 @@ def main(cfg: Box) -> None:
             model.setup()
         optimizer, scheduler = configure_opt(cfg, model)
         if cfg.resume and cfg.resume_dir is not None:
-            full_checkpoint = fabric.load(cfg.model.ckpt)
+            full_checkpoint = fabric.load(cfg.resume_dir)
             model.load_state_dict(full_checkpoint["model"])
             optimizer.load_state_dict(full_checkpoint["optimizer"])
 
@@ -254,7 +254,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description=__doc__)
+    parser.add_argument('--resume', default=False, type=bool, help='resume?')
     parser.add_argument('--resume_dir', default='', type=str, help='resume from checkpoint')
+    parser.add_argument('--num_epochs', default=0, type=int, help='epochs')
     parser.add_argument('--batch_size', default=0, type=int, help='batch_size')
     parser.add_argument('--adapted_img_encoder',default=False,type=bool, help='adapted_img_encoder')
 
@@ -264,7 +266,13 @@ if __name__ == "__main__":
         cfg.batch_size = args.batch_size
     if args.resume_dir != '':
         cfg.resume_dir = args.resume_dir
+    if args.resume!=False:
+        cfg.resume=True
+    if args.num_epochs!=0:
+        cfg.num_epochs=args.num_epochs
     cfg.adapted_img_encoder = args.adapted_img_encoder
+
+    print(args)
 
 
     torch.cuda.empty_cache()

@@ -126,7 +126,7 @@ class Adapted_ImageEncoderViT(nn.Module):
 
         self.InteractionBlocks=nn.ModuleList([InteractionBlock(dim=embed_dim) for i in range(len(interaction_indexes))])
 
-        self.scale_factor = 16
+        self.scale_factor = 8
         self.input_type = 'fft'
         self.freq_nums = 0.25
         self.prompt_generator = PromptGenerator(self.scale_factor, embed_dim,
