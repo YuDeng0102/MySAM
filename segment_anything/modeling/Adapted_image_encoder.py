@@ -126,11 +126,11 @@ class Adapted_ImageEncoderViT(nn.Module):
 
         self.InteractionBlocks=nn.ModuleList([InteractionBlock(dim=embed_dim) for i in range(len(interaction_indexes))])
 
-        self.scale_factor = 8
+        self.scale_factor =16
         self.input_type = 'fft'
-        self.freq_nums = 0.25
+        self.freq_nums = 0.4
         self.prompt_generator = PromptGenerator(self.scale_factor, embed_dim,
-                                               len(interaction_indexes),self.input_type, self.freq_nums,
+                                               depth,self.input_type, self.freq_nums,
                                                 img_size, patch_size)
 
     def _add_level_embed(self, c2, c3, c4):
@@ -164,10 +164,10 @@ class Adapted_ImageEncoderViT(nn.Module):
         # for blk in self.blocks:
         #     x = blk(x)
 
-        for i,interaactionBlock in enumerate(self.InteractionBlocks):
+        for i,interactionBlock in enumerate(self.InteractionBlocks):
             indexes=self.interaction_indexes[i]
-            x = prompt[i].reshape(B, H, W, -1) + x
-            x,c=interaactionBlock(x,c,self.blocks[indexes[0]:indexes[1]+1],deform_inputs1,deform_inputs2)
+            fft_info=prompt[indexes[0]:indexes[1]+1]
+            x,c=interactionBlock(x,c,self.blocks[indexes[0]:indexes[1]+1],deform_inputs1,deform_inputs2,fft_info)
 
 
         x = self.neck(x.permute(0, 3, 1, 2))

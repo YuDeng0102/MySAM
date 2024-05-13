@@ -37,7 +37,7 @@ base_config = {
     },
     "datasets": {
         "coco": {
-            "root_dir": "./data/MyCoco5"
+            "root_dir": "./data/datasets_BJFU"
         }
     },
 }

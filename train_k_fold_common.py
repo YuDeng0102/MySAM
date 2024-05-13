@@ -259,6 +259,10 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', default=0, type=int, help='epochs')
     parser.add_argument('--batch_size', default=0, type=int, help='batch_size')
     parser.add_argument('--adapted_img_encoder',default=False,type=bool, help='adapted_img_encoder')
+    parser.add_argument('--out_dir', default='', type=str, help='save directory')
+    parser.add_argument('--start_fold', default=-1, type=int, help='which fold to start(start with 0)')
+    parser.add_argument('--root_dir', default='', type=str, help='data_root')
+
 
     args = parser.parse_args()
 
@@ -270,6 +274,12 @@ if __name__ == "__main__":
         cfg.resume=True
     if args.num_epochs!=0:
         cfg.num_epochs=args.num_epochs
+    if args.start_fold != -1:
+        cfg.start_fold= args.start_fold
+    if args.out_dir != '':
+        cfg.out_dir = args.out_dir
+    if args.root_dir != '':
+        cfg.datasets.coco.root_dir=args.root_dir
     cfg.adapted_img_encoder = args.adapted_img_encoder
 
     print(args)
@@ -282,5 +292,6 @@ if __name__ == "__main__":
     print("avaiable:", torch.cuda.device_count())
 
     main(cfg)
+    #calc_paramaters(cfg)
     # print(torch.cuda.is_available())
     torch.cuda.empty_cache()
